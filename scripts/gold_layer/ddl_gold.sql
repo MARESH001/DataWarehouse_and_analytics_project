@@ -1,7 +1,11 @@
 -------------------------------------------------------------------
 -- Customer Dimension
 -------------------------------------------------------------------
-CREATE OR ALTER VIEW gold.dim_customers AS
+IF OBJECT_ID('gold.dim_customers', 'V') IS NOT NULL
+    DROP VIEW gold.dim_customers;
+GO
+
+CREATE VIEW gold.dim_customers AS
 SELECT
     ROW_NUMBER() OVER (ORDER BY ci.cst_id) AS customer_key,
     ci.cst_id        AS customer_id,
@@ -27,7 +31,11 @@ GO
 -------------------------------------------------------------------
 -- Product Dimension
 -------------------------------------------------------------------
-CREATE OR ALTER VIEW gold.dim_products AS
+IF OBJECT_ID('gold.dim_products', 'V') IS NOT NULL
+    DROP VIEW gold.dim_products;
+GO
+
+CREATE VIEW gold.dim_products AS
 SELECT
     ROW_NUMBER() OVER (ORDER BY pn.prd_start_dt, pn.prd_key) AS product_key,
     pn.prd_id      AS product_id,
@@ -42,14 +50,18 @@ SELECT
     pn.prd_start_dt AS start_date
 FROM silver.crm_prd_info pn
 LEFT JOIN silver.erp_px_cat_g1v2 pc
-    ON pn.cat_id = pc.id
-WHERE pn.prd_end_dt IS NULL; -- filter out historical data
+    ON REPLACE(pn.cat_id, '-', '_') = pc.id
+WHERE pn.prd_end_dt IS NULL;
 GO
 
 -------------------------------------------------------------------
 -- Sales Fact
 -------------------------------------------------------------------
-CREATE OR ALTER VIEW gold.fact_sales AS
+IF OBJECT_ID('gold.fact_sales', 'V') IS NOT NULL
+    DROP VIEW gold.fact_sales;
+GO
+
+CREATE VIEW gold.fact_sales AS
 SELECT
     sd.sls_ord_num   AS order_number,
     pr.product_key   AS product_key,
